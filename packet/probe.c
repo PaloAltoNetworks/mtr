@@ -282,8 +282,8 @@ void respond_to_probe(
     }
 
     snprintf(response, COMMAND_BUFFER_SIZE,
-             "%d %s %s %s round-trip-time %d",
-             probe->token, result, ip_argument, ip_text, round_trip_us);
+             "%d %s %s %s round-trip-time %d seq %d",
+             probe->token, result, ip_argument, ip_text, round_trip_us, probe->sequence);
 
     if (mpls_count) {
         format_mpls_string(mpls_str, COMMAND_BUFFER_SIZE, mpls_count,

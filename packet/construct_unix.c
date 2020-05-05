@@ -402,7 +402,7 @@ static
 int open_stream_socket(
     const struct net_state_t *net_state,
     int protocol,
-    int port,
+    int *port,
     const struct sockaddr_storage *src_sockaddr,
     const struct sockaddr_storage *dest_sockaddr,
     const struct probe_param_t *param)
@@ -411,7 +411,7 @@ int open_stream_socket(
     int addr_len;
     int dest_port;
     struct sockaddr_storage dest_port_addr;
-    struct sockaddr_storage src_port_addr;
+//    struct sockaddr_storage src_port_addr;
 
     if (param->ip_version == 6) {
         stream_socket = socket(AF_INET6, SOCK_STREAM, protocol);
@@ -439,11 +439,11 @@ int open_stream_socket(
        Bind to a known local port so we can identify which probe
        causes a TTL expiration.
      */
-    construct_addr_port(&src_port_addr, src_sockaddr, port);
-    if (bind(stream_socket, (struct sockaddr *) &src_port_addr, addr_len)) {
-        close(stream_socket);
-        return -1;
-    }
+//    construct_addr_port(&src_port_addr, src_sockaddr, port);
+//    if (bind(stream_socket, (struct sockaddr *) &src_port_addr, addr_len)) {
+//        close(stream_socket);
+//        return -1;
+//    }
 
     if (param->dest_port) {
         dest_port = param->dest_port;
@@ -463,6 +463,12 @@ int open_stream_socket(
             return -1;
         }
     }
+
+    // get the local port that has been allocated for this connection
+    struct sockaddr_in x_addr;
+    int x_len = sizeof(x_addr);
+    getsockname(stream_socket, (struct sockaddr *)&x_addr, &x_len);
+    *port = ntohs(x_addr.sin_port);
 
     return stream_socket;
 }
@@ -577,7 +583,7 @@ int construct_ip4_packet(
 
     if (is_stream_protocol) {
         send_socket =
-            open_stream_socket(net_state, param->protocol, probe->sequence,
+            open_stream_socket(net_state, param->protocol, &probe->sequence,
                                &probe->local_addr, &probe->remote_addr, param);
 
         if (send_socket == -1) {
@@ -710,7 +716,7 @@ int construct_ip6_packet(
 
     if (is_stream_protocol) {
         send_socket =
-            open_stream_socket(net_state, param->protocol, probe->sequence,
+            open_stream_socket(net_state, param->protocol, &probe->sequence,
                                &probe->local_addr, &probe->remote_addr, param);
 
         if (send_socket == -1) {

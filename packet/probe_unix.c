@@ -527,24 +527,24 @@ bool is_protocol_supported(
 /*  Report an error during send_probe based on the errno value  */
 static
 void report_packet_error(
-    int command_token)
+    int command_token, int sequence)
 {
     if (errno == EINVAL) {
-        printf("%d invalid-argument\n", command_token);
+        printf("%d invalid-argument sequence %d\n", command_token, sequence);
     } else if (errno == ENETDOWN) {
-        printf("%d network-down\n", command_token);
+        printf("%d network-down sequence %d\n", command_token, sequence);
     } else if (errno == ENETUNREACH) {
-        printf("%d no-route\n", command_token);
+        printf("%d no-route sequence %d\n", command_token, sequence);
     } else if (errno == EHOSTUNREACH) {
-        printf("%d no-route\n", command_token);
+        printf("%d no-route sequence %d\n", command_token, sequence);
     } else if (errno == EPERM) {
-        printf("%d permission-denied\n", command_token);
+        printf("%d permission-denied sequence %d\n", command_token, sequence);
     } else if (errno == EADDRINUSE) {
-        printf("%d address-in-use\n", command_token);
+        printf("%d address-in-use sequence %d\n", command_token, sequence);
     } else if (errno == EADDRNOTAVAIL) {
-        printf("%d address-not-available\n", command_token);
+        printf("%d address-not-available sequence %d\n", command_token, sequence);
     } else {
-        printf("%d unexpected-error errno %d\n", command_token, errno);
+        printf("%d unexpected-error errno %d sequence %d\n", command_token, errno, sequence);
     }
 }
 
@@ -611,7 +611,7 @@ void send_probe(
             receive_probe(net_state, probe, ICMP_ECHOREPLY,
                           &probe->remote_addr, NULL, 0, NULL);
         } else {
-            report_packet_error(param->command_token);
+            report_packet_error(param->command_token, probe->sequence);
             free_probe(net_state, probe);
         }
 
@@ -622,7 +622,7 @@ void send_probe(
         if (send_packet(net_state, param, probe->sequence,
                         packet, packet_size, &probe->remote_addr) == -1) {
 
-            report_packet_error(param->command_token);
+            report_packet_error(param->command_token, probe->sequence);
             free_probe(net_state, probe);
             return;
         }
@@ -885,12 +885,12 @@ void receive_replies_from_probe_socket(
        If the connection complete successfully, or was refused, we can
        assume our probe arrived at the destination.
      */
-    if (!err || err == ECONNREFUSED) {
+    if (!err || err == ECONNREFUSED || err == EHOSTUNREACH) {
         receive_probe(net_state, probe, ICMP_ECHOREPLY,
                       &probe->remote_addr, NULL, 0, NULL);
     } else {
         errno = err;
-        report_packet_error(probe->token);
+        report_packet_error(probe->token, probe->sequence);
         free_probe(net_state, probe);
     }
 }
