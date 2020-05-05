@@ -35,7 +35,8 @@
 #include "utils.h"
 
 #define MAXLOADBAL 5
-#define MAX_FORMAT_STR 81
+// Needs to be at least 295 = 253 (dns max) + 1 (space) + 2 (brackets) + 39 (ipv6 addresss)
+#define MAX_FORMAT_STR 300
 
 
 void report_open(
@@ -281,6 +282,7 @@ void json_close(
 {
     int i, j, at, first, max;
     ip_t *addr;
+    struct hostent *host;
     char name[MAX_FORMAT_STR];
 
     printf("{\n");
@@ -311,6 +313,7 @@ void json_close(
     for (; at < max; at++) {
         addr = net_addr(at);
         snprint_addr(ctl, name, sizeof(name), addr);
+        host = ctl->dns ? addr2host((void *) addr, ctl->af) : NULL;
 
         if (at == first) {
             printf("{\n");
@@ -319,6 +322,11 @@ void json_close(
         }
         printf("      \"count\": \"%d\",\n", at + 1);
         printf("      \"host\": \"%s\",\n", name);
+
+        // sinefa - put address and domain as seperate fields
+        printf("      \"address\": \"%s\",\n", strlongip(ctl, addr));
+        printf("      \"domain\": \"%s\",\n", host ? host->h_name : "");
+
 #ifdef HAVE_IPINFO
         if(!ctl->ipinfo_no) {
           char* fmtinfo = fmt_ipinfo(ctl, addr);
