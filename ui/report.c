@@ -325,7 +325,12 @@ void json_close(
 
         // sinefa - put address and domain as seperate fields
         printf("      \"address\": \"%s\",\n", strlongip(ctl, addr));
-        printf("      \"domain\": \"%s\",\n", host ? host->h_name : "");
+        // leave empty if the IP is unspecified, the host name is set to
+        // the local system in this case and we don't want that.
+        if (addrcmp((void *) addr, (void *) &ctl->unspec_addr, ctl->af) != 0)
+            printf("      \"domain\": \"%s\",\n", host ? host->h_name : "");
+        else
+            printf("      \"domain\": \"\",\n");
 
 #ifdef HAVE_IPINFO
         if(!ctl->ipinfo_no) {
