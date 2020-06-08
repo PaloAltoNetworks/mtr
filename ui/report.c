@@ -290,6 +290,8 @@ void json_close(
     printf("    \"mtr\": {\n");
     printf("      \"src\": \"%s\",\n", ctl->LocalHostname);
     printf("      \"dst\": \"%s\",\n", ctl->Hostname);
+    if (ctl->dst_ip_str)
+        printf("      \"dstAddress\": \"%s\",\n", ctl->dst_ip_str);
     printf("      \"tos\": \"0x%X\",\n", ctl->tos);
     if (ctl->cpacketsize >= 0) {
         printf("      \"psize\": \"%d\",\n", ctl->cpacketsize);

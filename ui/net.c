@@ -746,6 +746,9 @@ int net_open(
         net_find_local_address();
     }
 
+    // store resolved address
+    ctl->dst_ip_str = strlongip(ctl, remoteaddress);
+
     return 0;
 }
 

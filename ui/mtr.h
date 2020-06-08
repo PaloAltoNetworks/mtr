@@ -83,6 +83,7 @@ struct mtr_ctl {
     float WaitTime;
     float GraceTime;
     char *Hostname;
+    char *dst_ip_str;           /* [sinefa] The resolved destination IP address */
     char *InterfaceName;
     char *InterfaceAddress;
     char LocalHostname[128];
