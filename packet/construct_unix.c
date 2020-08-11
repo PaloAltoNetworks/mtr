@@ -411,7 +411,7 @@ int open_stream_socket(
     int addr_len;
     int dest_port;
     struct sockaddr_storage dest_port_addr;
-//    struct sockaddr_storage src_port_addr;
+    struct sockaddr_storage src_port_addr;
 
     if (param->ip_version == 6) {
         stream_socket = socket(AF_INET6, SOCK_STREAM, protocol);
@@ -444,6 +444,16 @@ int open_stream_socket(
 //        close(stream_socket);
 //        return -1;
 //    }
+
+    uint16_t bind_port = 0;
+    if (param->local_port) {
+        bind_port = param->local_port;
+    }
+    construct_addr_port(&src_port_addr, src_sockaddr, bind_port);
+    if (bind(stream_socket, (struct sockaddr *) &src_port_addr, addr_len)) {
+        close(stream_socket);
+        return -1;
+    }
 
     if (param->dest_port) {
         dest_port = param->dest_port;
