@@ -174,6 +174,7 @@ static void __attribute__ ((__noreturn__)) usage(FILE * out)
           out);
     fputs(" -z, --aslookup             display AS number\n", out);
 #endif
+    fputs(" -D, --features             display features supported my mtr\n", out);
     fputs(" -h, --help                 display this help and exit\n", out);
     fputs
         (" -v, --version              output version information and exit\n",
@@ -331,6 +332,7 @@ static void parse_arg(
         /* option name, has argument, NULL, short name */
         {"help", 0, NULL, 'h'},
         {"version", 0, NULL, 'v'},
+        {"features", 0, NULL, 'D'},
 
         {"inet", 0, NULL, '4'}, /* IPv4 only */
 #ifdef ENABLE_IPV6
@@ -413,6 +415,16 @@ static void parse_arg(
         switch (opt) {
         case 'v':
             printf("mtr " PACKAGE_VERSION "\n");
+            exit(EXIT_SUCCESS);
+            break;
+        case 'D':
+            // sinefa - Report on the 'features' that are supported
+            // this lets driver program know if it has access to the
+            // required capabilities
+            printf("tcp-auto-local-port\n");    ///< Automatically select from local port for TCP
+            printf("tcp-local-port-bind\n");    ///< Local port bind works for TCP
+            printf("json-destination-ip\n");    ///< The destination-ip is included in the JSON output
+            printf("no-local-hostname\n");      ///< Don't resolve 0.0.0.0 to the local hostname (on windows)
             exit(EXIT_SUCCESS);
             break;
         case 'h':
