@@ -276,6 +276,16 @@ void json_open(
 {
 }
 
+static void print_one_opt(int enabled, const char* name, int* first)
+{
+    if (enabled) {
+        if (*first == 0) {
+            printf(", ");
+        }
+        *first = 0;
+        printf("\"%s\"", name);
+    }
+}
 
 void json_close(
     struct mtr_ctl *ctl)
@@ -305,7 +315,16 @@ void json_close(
     } else {
         printf("      \"bitpattern\": \"rand(0x00-FF)\",\n");
     }
-    printf("      \"tests\": \"%d\"\n", ctl->MaxPing);
+    printf("      \"tests\": \"%d\",\n", ctl->MaxPing);
+    printf("      \"options\": [");
+    int first_opt = 1;
+    print_one_opt(ctl->rttClamping, "rttClamping", &first_opt);
+    print_one_opt(ctl->use_dns, "useDns", &first_opt);
+    print_one_opt(ctl->show_ips, "showIps", &first_opt);
+    print_one_opt(ctl->enablempls, "enableMpls", &first_opt);
+    print_one_opt(ctl->dns, "dns", &first_opt);
+    print_one_opt(ctl->ipinfo_no, "asLookup", &first_opt);
+    printf("]\n");
     printf("    },\n");
 
     printf("    \"hubs\": [");

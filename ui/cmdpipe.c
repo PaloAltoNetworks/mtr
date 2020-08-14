@@ -698,6 +698,8 @@ void handle_command_reply(
         err = ENETUNREACH;
     } else if (!strcmp(reply_name, "network-down")) {
         err = ENETDOWN;
+    } else if (!strcmp(reply_name, "no-reply")) {
+        err = ETIMEDOUT;
     } else {
         /*  If the reply type is unknown, ignore it  */
         return;
@@ -708,7 +710,7 @@ void handle_command_reply(
        record the result.
      */
     if (parse_reply_arguments
-        (ctl, &reply, &fromaddress, &round_trip_time, &mpls)) {
+        (ctl, &reply, &fromaddress, &round_trip_time, &mpls) || err) {
 
         reply_func(ctl, seq_num, err, &mpls, (void *) &fromaddress,
                    round_trip_time);

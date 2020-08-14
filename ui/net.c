@@ -44,6 +44,11 @@
 #define MinSequence 33000
 #define MaxSequence 65536
 
+#define RTT_CLAMP_INDEX (MaxHost - 1)
+static int rtt_clamp_sent = 0; /* Have we sent high TTL packet to measure the destionation RTT? */
+static int rtt_clamp_recvd = 0; /* Have we received the response? */
+static int rtt_clamp_rtt = 0; /* The RTT that we measured */
+
 static int packetsize;          /* packet size used by ping */
 
 struct nethost {
@@ -169,10 +174,11 @@ static int new_sequence(
 static void net_send_query(
     struct mtr_ctl *ctl,
     int index,
-    int packet_size)
+    int packet_size,
+    int ttl)
 {
     int seq = new_sequence(ctl, index);
-    int time_to_live = index + 1;
+    int time_to_live = ttl;
 
     send_probe_command(ctl, &packet_command_pipe, remoteaddress,
                        sourceaddress, packet_size, seq, time_to_live);
@@ -232,10 +238,52 @@ static void net_process_ping(
     if (index < 0) {
         return;
     }
+    if (index == RTT_CLAMP_INDEX) {
+        /*
+         * This is the response to the initial probe we do to the
+         * destination to determine the destinations RTT. There is
+         * no entry in the host table for this.
+         */
+        rtt_clamp_recvd = 1;
+        if (err == 0) {
+            rtt_clamp_rtt = totusec;
+            /* round up as timeout is in seconds only and is rounded down */
+            int new_timeout = (rtt_clamp_rtt / 1000000 + 1) * 1000000;
+            //fprintf(stderr, "[net_process_ping/%d] Update timeout %d->%d\n", index, ctl->probe_timeout, new_timeout);
+            ctl->probe_timeout = new_timeout;
+        }
+        return;
+    }
     nh = &host[index];
     nh->err = err;
 
-
+    if (ctl->rttClamping && rtt_clamp_rtt > 0) {
+        /*
+         * We want to limit the rtt to 75% of the destination RTT for
+         * the first hop and to 150% of the destination RTT for
+         * subsequent hops. Only if the destination responded of
+         * course. Also don't restrict to under 100ms.
+         */
+        int rtt_max = 0;
+        if (index == 0) {
+            /* first hop */
+            rtt_max = rtt_clamp_rtt * 3 / 4; // 75%
+        } else {
+            /* subsequent hops */
+            rtt_max = rtt_clamp_rtt * 3 / 2; // 150%
+        }
+        if (rtt_max < 100*1000) {
+            /* 100ms is minimum limit */
+            rtt_max = 100*1000;
+        }
+        int ignore = (totusec > rtt_max);
+        //fprintf(stderr, "[net_process_ping/%d] rtt:%d max:%d (destination rtt:%d) - %s\n",
+        //        index, totusec, rtt_max, rtt_clamp_rtt, (ignore ? "IGNORE" : "ACCEPT"));
+        if (ignore) {
+            // ignpore
+            return;
+        }
+    }
 
     if (addrcmp(&nh->addr, &ctl->unspec_addr, ctl->af) == 0) {
         /* should be out of if as addr can change */
@@ -561,7 +609,25 @@ int net_send_batch(
         }
     }
 
-    net_send_query(ctl, batch_at, abs(packetsize));
+    if (ctl->rttClamping) {
+        /*
+         * If RTT clamping is enabled then we send an initial probe
+         * to the final destination and use the RTT of that packet to
+         * limit the maximum allowed RTT on the following packets.
+         */
+        if (!rtt_clamp_sent) {
+            /* send an initial packet to destination to get RTT */
+            net_send_query(ctl, RTT_CLAMP_INDEX, abs(packetsize), ctl->maxTTL - 1);
+            rtt_clamp_sent = 1;
+            return 0;
+        } else if (!rtt_clamp_recvd) {
+            /* still waiting for initial RTT response or timeout */
+            return 0;
+        }
+    }
+
+    int ttl = batch_at + 1;
+    net_send_query(ctl, batch_at, abs(packetsize), ttl);
 
     for (i = ctl->fstTTL - 1; i < batch_at; i++) {
         if (host_addr_cmp(i, &ctl->unspec_addr, ctl->af) == 0)
