@@ -115,7 +115,7 @@ struct mtr_ctl {
         use_dns:1,
         show_ips:1,
         enablempls:1, dns:1, reportwide:1, Interactive:1, DisplayMode:5,
-        rttClamping:1;
+        rttClamping:1, endVerification:1;
 };
 
 /* dynamic field drawing */

@@ -176,6 +176,7 @@ static void __attribute__ ((__noreturn__)) usage(FILE * out)
 #endif
     fputs(" -D, --features             display features supported my mtr\n", out);
     fputs(" -d, --rtt-clamping         test target first then limit RTT to 75%/150% of target RTT on first/subsequent hops\n", out);
+    fputs(" -E, --end-verification     test past destination to make sure it is the end\n", out);
     fputs(" -h, --help                 display this help and exit\n", out);
     fputs
         (" -v, --version              output version information and exit\n",
@@ -335,6 +336,7 @@ static void parse_arg(
         {"version", 0, NULL, 'v'},
         {"features", 0, NULL, 'D'},
         {"rtt-clamping", 0, NULL, 'd'},
+        {"end-verification", 0, NULL, 'E'},
 
         {"inet", 0, NULL, '4'}, /* IPv4 only */
 #ifdef ENABLE_IPV6
@@ -428,11 +430,16 @@ static void parse_arg(
             printf("json-destination-ip\n");    ///< The destination-ip is included in the JSON output
             printf("no-local-hostname\n");      ///< Don't resolve 0.0.0.0 to the local hostname (on windows)
             printf("rtt-clamping\n");           ///< Supports rtt clamping
+            printf("end-verification\n");       ///< Supports end verification
             exit(EXIT_SUCCESS);
             break;
 
         case 'd':
             ctl->rttClamping = 1;
+            break;
+
+        case 'E':
+            ctl->endVerification = 1;
             break;
 
         case 'h':

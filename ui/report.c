@@ -324,6 +324,7 @@ void json_close(
     print_one_opt(ctl->enablempls, "enableMpls", &first_opt);
     print_one_opt(ctl->dns, "dns", &first_opt);
     print_one_opt(ctl->ipinfo_no, "asLookup", &first_opt);
+    print_one_opt(ctl->endVerification, "endVerification", &first_opt);
     printf("]\n");
     printf("    },\n");
 

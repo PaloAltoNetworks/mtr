@@ -505,12 +505,67 @@ int net_jinta(
     return (host[at].jinta);
 }
 
+static int net_max_end_verification(struct mtr_ctl *ctl)
+{
+    int i;
+    for (i = 0; i < ctl->maxTTL && i < numhosts; i++) {
+        if (host_addr_cmp(i, remoteaddress, ctl->af) != 0) {
+            // the current HOP is not the destination, so ignore
+            continue;
+        }
+        if (host_addr_cmp(i + 1, remoteaddress, ctl->af) == 0) {
+            // the next HOP also the destination, so ignore
+            continue;
+        }
+        if (host_addr_cmp(i + 1, &ctl->unspec_addr, ctl->af) == 0) {
+            // the next HOP unspecified, so ignore
+            continue;
+        }
+
+        /*
+         * So he have [DEST] [X] where C is not the destination and not
+         * unspecified. So lets remove this entry.
+         */
+        int j;
+        for (j = i; j < ctl->maxTTL - 1 && j < numhosts - 1; j++) {
+            memcpy(&host[j].addr, &host[j + 1].addr, sizeof(struct nethost));
+        }
+        memset(&host[j + 1], 0, sizeof(struct nethost));
+        numhosts--;
+        i--;
+    }
+
+    int max = 0;
+    int last_unspec = 0;
+    for (i = 0; i < ctl->maxTTL && i < numhosts; i++) {
+        if (host_addr_cmp(i, &ctl->unspec_addr, ctl->af) == 0) {
+            if (!last_unspec) {
+                last_unspec = 1;
+                max = i + 1;
+            }
+            continue;
+        }
+        last_unspec = 0;
+        max = i + 1;
+        if (host[i].err != 0) {
+            break;
+        }
+        if (host_addr_cmp(i, remoteaddress, ctl->af) == 0) {
+            break;
+        }
+    }
+    return max;
+}
 
 int net_max(
     struct mtr_ctl *ctl)
 {
     int at;
     int max;
+
+    if (ctl->endVerification) {
+        return net_max_end_verification(ctl);
+    }
 
     max = 0;
     for (at = 0; at < ctl->maxTTL; at++) {
@@ -638,12 +693,27 @@ int net_send_batch(
            hosts. Removed in 0.65. 
            If the line proves necessary, it should at least NOT trigger that line
            when host[i].addr == 0 */
-        if (host_addr_cmp(i, remoteaddress, ctl->af) == 0)
-            n_unknown = MaxHost;        /* Make sure we drop into "we should restart" */
+        if (host_addr_cmp(i, remoteaddress, ctl->af) == 0) {
+            if (!ctl->endVerification || (i > 0 && host_addr_cmp(i - 1, remoteaddress, ctl->af) == 0)) {
+                n_unknown = MaxHost;        /* Make sure we drop into "we should restart" */
+            }
+        }
+    }
+
+    int atTarget = 0;
+    if (host_addr_cmp(batch_at, remoteaddress, ctl->af) == 0) {
+        if (ctl->endVerification) {
+            // we want to see the target _twice_ to be sure we are at the end
+            if (batch_at > 0 && host_addr_cmp(batch_at - 1, remoteaddress, ctl->af) == 0) {
+                atTarget = 1;
+            }
+        } else {
+            atTarget = 1;
+        }
     }
 
     if (                        /* success in reaching target */
-           (host_addr_cmp(batch_at, remoteaddress, ctl->af) == 0) ||
+           atTarget ||
            /* fail in consecutive maxUnknown (firewall?) */
            (n_unknown > ctl->maxUnknown) ||
            /* or reach limit  */
