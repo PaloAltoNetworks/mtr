@@ -294,6 +294,7 @@ void json_close(
     ip_t *addr;
     struct hostent *host;
     char name[MAX_FORMAT_STR];
+    struct mplslen *mpls;
 
     printf("{\n");
     printf("  \"report\": {\n");
@@ -334,6 +335,7 @@ void json_close(
     at = first = net_min(ctl);
     for (; at < max; at++) {
         addr = net_addr(at);
+        mpls = net_mpls(at);
         snprint_addr(ctl, name, sizeof(name), addr);
         host = ctl->dns ? addr2host((void *) addr, ctl->af) : NULL;
 
@@ -361,6 +363,23 @@ void json_close(
           printf("      \"ASN\": \"%s\",\n", fmtinfo);
         }
 #endif
+        if (ctl->enablempls && mpls->labels) {
+            printf("      \"mpls\": [");
+            int k;
+            for (k = 0; k < mpls->labels; k++) {
+                if (k != 0) {
+                    printf(",");
+                }
+                printf("\n        {\n");
+                printf("          \"label\": %ld,\n", mpls->label[k]); // 24 bits
+                printf("          \"TC\": %d,\n", mpls->tc[k]); // traffic class - (Qos and ECN) - 3 bits
+                printf("          \"S\": %d,\n", mpls->s[k]); // Bottom of stak - 1 bit
+                printf("          \"TTL\": %d\n", mpls->ttl[k]); // TTL 8-bits
+                printf("        }");
+            }
+            printf("\n      ],\n");
+        }
+
         for (i = 0; i < MAXFLD; i++) {
             const char *format;
 
