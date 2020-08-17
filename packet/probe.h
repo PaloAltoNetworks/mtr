@@ -169,7 +169,8 @@ void respond_to_probe(
     const struct sockaddr_storage *remote_addr,
     unsigned int round_trip_us,
     int mpls_count,
-    const struct mpls_label_t *mpls);
+    const struct mpls_label_t *mpls,
+    int tos);
 
 int decode_address_string(
     int ip_version,

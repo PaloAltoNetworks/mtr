@@ -609,7 +609,7 @@ void send_probe(
          */
         if (errno == ECONNREFUSED) {
             receive_probe(net_state, probe, ICMP_ECHOREPLY,
-                          &probe->remote_addr, NULL, 0, NULL);
+                          &probe->remote_addr, NULL, 0, NULL, -1);
         } else {
             report_packet_error(param->command_token, probe->sequence);
             free_probe(net_state, probe);
@@ -668,7 +668,8 @@ void receive_probe(
     const struct sockaddr_storage *remote_addr,
     struct timeval *timestamp,
     int mpls_count,
-    struct mpls_label_t *mpls)
+    struct mpls_label_t *mpls,
+    int ds)
 {
     unsigned int round_trip_us;
     struct timeval *departure_time = &probe->platform.departure_time;
@@ -687,7 +688,7 @@ void receive_probe(
         timestamp->tv_usec - departure_time->tv_usec;
 
     respond_to_probe(net_state, probe, icmp_type,
-                     remote_addr, round_trip_us, mpls_count, mpls);
+                     remote_addr, round_trip_us, mpls_count, mpls, ds);
 }
 
 /*
@@ -887,7 +888,7 @@ void receive_replies_from_probe_socket(
      */
     if (!err || err == ECONNREFUSED || err == EHOSTUNREACH) {
         receive_probe(net_state, probe, ICMP_ECHOREPLY,
-                      &probe->remote_addr, NULL, 0, NULL);
+                      &probe->remote_addr, NULL, 0, NULL, -1);
     } else {
         errno = err;
         report_packet_error(probe->token, probe->sequence);

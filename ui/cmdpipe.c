@@ -554,7 +554,8 @@ bool parse_reply_arguments(
     struct command_t *reply,
     ip_t * fromaddress,
     int *round_trip_time,
-    struct mplslen *mpls)
+    struct mplslen *mpls,
+    int *ds)
 {
     bool found_round_trip;
     bool found_ip;
@@ -597,6 +598,11 @@ bool parse_reply_arguments(
             if (!errno) {
                 found_round_trip = true;
             }
+        }
+
+        /*  The TOS value  */
+        if (!strcmp(arg_name, "ds")) {
+            *ds = strtol(arg_value, NULL, 10);
         }
 
         /*  MPLS labels  */
@@ -672,6 +678,7 @@ void handle_command_reply(
     int round_trip_time;
     char *reply_name;
     struct mplslen mpls;
+    int ds = -1; // -1 == could not determine DF (IPv4 TOS/IPv6 Traffic Class)
 
     /*  Parse the reply string  */
     if (parse_command(&reply, reply_str)) {
@@ -710,9 +717,9 @@ void handle_command_reply(
        record the result.
      */
     if (parse_reply_arguments
-        (ctl, &reply, &fromaddress, &round_trip_time, &mpls) || err) {
+        (ctl, &reply, &fromaddress, &round_trip_time, &mpls, &ds) || err) {
 
-        reply_func(ctl, seq_num, err, &mpls, (void *) &fromaddress,
+        reply_func(ctl, seq_num, err, &mpls, ds, (void *) &fromaddress,
                    round_trip_time);
     }
 }
@@ -760,7 +767,6 @@ void consume_reply_buffer(
            mulitple replies arriving simultaneously.
          */
         *end_of_reply = 0;
-
         /*  Parse and record the reply results  */
         handle_command_reply(ctl, reply_start, reply_func);
 

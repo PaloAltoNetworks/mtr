@@ -54,6 +54,8 @@ extern int net_min(
     struct mtr_ctl *ctl);
 extern int net_last(
     int at);
+extern int net_ds(
+    int at);
 extern ip_t *net_addr(
     int at);
 extern int net_err(

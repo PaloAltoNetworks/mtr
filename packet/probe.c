@@ -252,7 +252,8 @@ void respond_to_probe(
     const struct sockaddr_storage *remote_addr,
     unsigned int round_trip_us,
     int mpls_count,
-    const struct mpls_label_t *mpls)
+    const struct mpls_label_t *mpls,
+    int ds)
 {
     char ip_text[INET6_ADDRSTRLEN];
     char response[COMMAND_BUFFER_SIZE];
@@ -284,6 +285,14 @@ void respond_to_probe(
     snprintf(response, COMMAND_BUFFER_SIZE,
              "%d %s %s %s round-trip-time %d seq %d",
              probe->token, result, ip_argument, ip_text, round_trip_us, probe->sequence);
+
+    // if DS is -1 then we could not work it out, if it is >= 0 then
+    // we worked it out, so included it in the output.
+    if (ds >= 0) {
+        snprintf(mpls_str, sizeof(mpls_str) - 1, " ds %d", ds);
+        remaining_size = COMMAND_BUFFER_SIZE - strlen(response) - 1;
+        strncat(response, mpls_str, remaining_size);
+    }
 
     if (mpls_count) {
         format_mpls_string(mpls_str, COMMAND_BUFFER_SIZE, mpls_count,

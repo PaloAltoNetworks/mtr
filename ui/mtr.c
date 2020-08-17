@@ -431,6 +431,8 @@ static void parse_arg(
             printf("no-local-hostname\n");      ///< Don't resolve 0.0.0.0 to the local hostname (on windows)
             printf("rtt-clamping\n");           ///< Supports rtt clamping
             printf("end-verification\n");       ///< Supports end verification
+            printf("json-mpls\n");              ///< Supports MPLS values in json output
+            printf("json-tos\n");               ///< Supports TOS values in json output
             exit(EXIT_SUCCESS);
             break;
 

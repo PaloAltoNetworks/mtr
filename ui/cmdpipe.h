@@ -49,6 +49,7 @@ void (
     int sequence,
     int err,
     struct mplslen * mpls,
+    int ds,
     ip_t * addr,
     int round_trip_time);
 

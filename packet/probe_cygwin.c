@@ -671,7 +671,7 @@ void complete_icmp_result(struct icmp_thread_request_t *request)
         /*  Record probe result  */
         respond_to_probe(net_state, probe,
                          request->icmp_type, &request->remote_addr,
-                         request->round_trip_us, 0, NULL);
+                         request->round_trip_us, 0, NULL, -1);
     } else {
         report_win_error(probe->token, request->reply_status);
         free_probe(net_state, probe);

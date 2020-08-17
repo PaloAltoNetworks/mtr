@@ -111,7 +111,8 @@ void receive_probe(
     const struct sockaddr_storage *remote_addr,
     struct timeval *timestamp,
     int mpls_count,
-    struct mpls_label_t *mpls);
+    struct mpls_label_t *mpls,
+    int ds);
 
 int gather_probe_sockets(
     const struct net_state_t *net_state,

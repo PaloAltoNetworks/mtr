@@ -380,6 +380,11 @@ void json_close(
             printf("\n      ],\n");
         }
 
+        /* The differential services field - ie IPv4 TOS / IPv6 traffic class */
+        if (net_ds(at) >= 0) {
+            printf("      \"DS\": %d,\n", net_ds(at));
+        }
+
         for (i = 0; i < MAXFLD; i++) {
             const char *format;
 

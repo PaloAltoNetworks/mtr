@@ -69,6 +69,7 @@ struct nethost {
     int javg;                   /* avg jitter */
     int jworst;                 /* max jitter */
     int jinta;                  /* estimated variance,? rfc1889's "Interarrival Jitter" */
+    int ds;                     /* differentiated services value (IPv4 TOS/IPv6 Traffic class). Will be -1 if not known */
     int transit;
     int saved[SAVED_PINGS];
     int saved_seq_offset;
@@ -218,6 +219,7 @@ static void net_process_ping(
     int seq,
     int err,
     struct mplslen *mpls,
+    int ds,
     ip_t * addr,
     int totusec)
 {
@@ -359,6 +361,7 @@ static void net_process_ping(
     nh->sent = 0;
     nh->up = 1;
     nh->transit = 0;
+    nh->ds = ds;
 
     net_save_return(index, sequence[seq].saved_seq, totusec);
     display_rawping(ctl, index, totusec, seq);
@@ -372,6 +375,13 @@ void net_process_return(
     struct mtr_ctl *ctl)
 {
     handle_command_replies(ctl, &packet_command_pipe, net_process_ping);
+}
+
+
+int net_ds(
+    int at)
+{
+    return host[at].ds;
 }
 
 
