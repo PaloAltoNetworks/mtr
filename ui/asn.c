@@ -205,13 +205,22 @@ static void reverse_host6(
     char *buff,
     int buff_length)
 {
+    // sinefa - rewrite to prevent illegal instruction crashes on macos
+    // use more strict checking of string lengths and standard string.h functions
+    // to build the string
     int i;
-    char *b = buff;
-    for (i = (sizeof(*addr) / 2 - 1); i >= 0; i--, b += 4)      /* 64b portion */
-        snprintf(b, buff_length,
+    buff[0] = '\0';
+    for (i = (sizeof(*addr) / 2 - 1); i >= 0; i--) {      /* 64b portion */
+        char tmpstr[NAMELEN];
+        int len = snprintf(tmpstr, NAMELEN,
                  "%x.%x.", addr->s6_addr[i] & 0xf, addr->s6_addr[i] >> 4);
 
-    buff[strlen(buff) - 1] = '\0';
+        if (len > 0 && len < NAMELEN && strlen(buff) + len < buff_length) {
+            strncat(buff, tmpstr, len);
+        }
+    }
+    if (strlen(buff) > 0)
+        buff[strlen(buff) - 1] = '\0';
 }
 #endif
 
