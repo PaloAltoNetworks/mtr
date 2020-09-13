@@ -255,7 +255,7 @@ void handle_inner_ip6_packet(
         sizeof(struct IPHeader) + sizeof(struct SCTPHeader);
     const struct SCTPHeader *sctp;
 #endif
-    int ds = (ip->version & 0xf0) << 4 | (ip->flow[0] & 0x0f);
+    int ds = (ip->version & 0x0f) << 4 | (ip->flow[0] & 0xf0) >> 4;
 
     if (ip->protocol == IPPROTO_ICMPV6) {
         if (packet_length < ip_icmp_size) {
