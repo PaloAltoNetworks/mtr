@@ -41,9 +41,6 @@
 #include "utils.h"
 #include "packet/sockaddr.h"
 
-#define MinSequence 33000
-#define MaxSequence 65536
-
 #define RTT_CLAMP_INDEX (MaxHost - 1)
 static int rtt_clamp_sent = 0; /* Have we sent high TTL packet to measure the destionation RTT? */
 static int rtt_clamp_recvd = 0; /* Have we received the response? */
@@ -157,11 +154,28 @@ static int new_sequence(
     struct mtr_ctl *ctl,
     int index)
 {
-    static int next_sequence = MinSequence;
+    static int next_sequence = 0;
+    static int min_sequence = MinSequence;
     int seq;
 
+    if (next_sequence == 0) {
+        // not yet set, so set to min sequence
+        if (ctl->initial_seqno_offset < 0) {
+            // select a random initial seq number between MinSequence & MaxSequence
+            double mult = (double)(MaxSequence - MinSequence) / (double)RAND_MAX;
+            double offset = mult * (double)rand();
+            next_sequence = MinSequence + (int)(offset);
+        } else if (ctl->initial_seqno_offset >= 0) {
+            // use specific initiatl offse
+            next_sequence = ctl->initial_seqno_offset;
+            if (ctl->initial_seqno_offset < min_sequence) {
+                min_sequence = ctl->initial_seqno_offset;
+            }
+        }
+    }
+
     seq = next_sequence++;
-    if (next_sequence >= MaxSequence) {
+    if (next_sequence >= min_sequence) {
         next_sequence = MinSequence;
     }
 

@@ -177,6 +177,7 @@ static void __attribute__ ((__noreturn__)) usage(FILE * out)
     fputs(" -D, --features             display features supported my mtr\n", out);
     fputs(" -d, --rtt-clamping         test target first then limit RTT to 75%/150% of target RTT on first/subsequent hops\n", out);
     fputs(" -E, --end-verification     test past destination to make sure it is the end\n", out);
+    fputs(" -q, --seqno NUMBER         set the initial sequence number\n", out);
     fputs(" -h, --help                 display this help and exit\n", out);
     fputs
         (" -v, --version              output version information and exit\n",
@@ -337,6 +338,7 @@ static void parse_arg(
         {"features", 0, NULL, 'D'},
         {"rtt-clamping", 0, NULL, 'd'},
         {"end-verification", 0, NULL, 'E'},
+        {"seqno", 1, NULL, 'q'},
 
         {"inet", 0, NULL, '4'}, /* IPv4 only */
 #ifdef ENABLE_IPV6
@@ -433,6 +435,7 @@ static void parse_arg(
             printf("end-verification\n");       ///< Supports end verification
             printf("json-mpls\n");              ///< Supports MPLS values in json output
             printf("json-tos\n");               ///< Supports TOS values in json output
+            printf("seqno\n");                  ///< Supports -q/--seqno
             exit(EXIT_SUCCESS);
             break;
 
@@ -442,6 +445,13 @@ static void parse_arg(
 
         case 'E':
             ctl->endVerification = 1;
+            break;
+
+        case 'q':
+            ctl->initial_seqno_offset = strtonum_or_err(optarg, "invalid argument", STRTO_INT);
+            if (ctl->initial_seqno_offset > MaxSequence)
+                error(EXIT_FAILURE, 0, "value out of range (%d - %d): %s",
+                      0, (MaxSequence - MinSequence), optarg);
             break;
 
         case 'h':
@@ -814,6 +824,7 @@ int main(
     ctl.probe_timeout = 10 * 1000000;
     ctl.ipinfo_no = -1;
     ctl.ipinfo_max = -1;
+    ctl.initial_seqno_offset = -1; /* random */
     xstrncpy(ctl.fld_active, "LS NABWV", 2 * MAXFLD);
 
     /*

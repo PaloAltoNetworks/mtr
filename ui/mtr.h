@@ -110,6 +110,7 @@ struct mtr_ctl {
     char available_options[MAXFLD];
     int display_offset;         /* only used in text mode */
     void *gtk_data;             /* pointer to hold arbitrary gtk data */
+    int initial_seqno_offset;	/* offset to add to initial seq no if >=0, if -ve use random offset */
     unsigned int                /* bit field to hold named booleans */
      ForceMaxPing:1,
         use_dns:1,

@@ -31,6 +31,9 @@
 
 #include "mtr.h"
 
+#define MinSequence 33000
+#define MaxSequence 65536
+
 extern int net_open(
     struct mtr_ctl *ctl,
     struct hostent *host);
