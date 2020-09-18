@@ -263,10 +263,6 @@ static void net_process_ping(
         rtt_clamp_recvd = 1;
         if (err == 0) {
             rtt_clamp_rtt = totusec;
-            /* round up as timeout is in seconds only and is rounded down */
-            int new_timeout = (rtt_clamp_rtt / 1000000 + 1) * 1000000;
-            //fprintf(stderr, "[net_process_ping/%d] Update timeout %d->%d\n", index, ctl->probe_timeout, new_timeout);
-            ctl->probe_timeout = new_timeout;
         }
         return;
     }
