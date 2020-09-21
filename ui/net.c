@@ -175,8 +175,8 @@ static int new_sequence(
     }
 
     seq = next_sequence++;
-    if (next_sequence >= min_sequence) {
-        next_sequence = MinSequence;
+    if (next_sequence >= MaxSequence) {
+        next_sequence = min_sequence;
     }
 
     save_sequence(ctl, index, seq);
