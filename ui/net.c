@@ -279,21 +279,21 @@ static void net_process_ping(
         int rtt_max = 0;
         if (index == 0) {
             /* first hop */
-            rtt_max = rtt_clamp_rtt * 3 / 4; // 75%
+            rtt_max = rtt_clamp_rtt / 4 * 3; // 75%
         } else {
             /* subsequent hops */
-            rtt_max = rtt_clamp_rtt * 3 / 2; // 150%
+            rtt_max = rtt_clamp_rtt / 2 * 3; // 150%
         }
         if (rtt_max < 100*1000) {
             /* 100ms is minimum limit */
             rtt_max = 100*1000;
         }
-        int ignore = (totusec > rtt_max);
+        int clamp = (totusec > rtt_max);
         //fprintf(stderr, "[net_process_ping/%d] rtt:%d max:%d (destination rtt:%d) - %s\n",
-        //        index, totusec, rtt_max, rtt_clamp_rtt, (ignore ? "IGNORE" : "ACCEPT"));
-        if (ignore) {
-            // ignpore
-            return;
+        //        index, totusec, rtt_max, rtt_clamp_rtt, (cmaple ? "CLAMP" : "OK"));
+        if (clamp) {
+            // reduce the value to out calcualted rtt max
+            totusec = rtt_max;
         }
     }
 
