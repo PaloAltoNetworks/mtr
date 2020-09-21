@@ -377,6 +377,10 @@ static void net_process_ping(
     display_rawping(ctl, index, totusec, seq);
 }
 
+int net_rtt_clamp_rtt() {
+    return rtt_clamp_rtt;
+}
+
 /*
     Invoked when the read pipe from the mtr-packet subprocess is readable.
     If we have received a complete reply, process it.

@@ -129,3 +129,5 @@ extern int addrcmp(
 extern void net_add_fds(
     fd_set * writefd,
     int *maxfd);
+
+extern int net_rtt_clamp_rtt();

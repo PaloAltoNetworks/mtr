@@ -317,6 +317,9 @@ void json_close(
         printf("      \"bitpattern\": \"rand(0x00-FF)\",\n");
     }
     printf("      \"tests\": \"%d\",\n", ctl->MaxPing);
+    if (net_rtt_clamp_rtt()) {
+        printf("      \"initialRtt\": \"%0.2f\",\n", (double)net_rtt_clamp_rtt() / 1000.0);
+    }
     printf("      \"options\": [");
     int first_opt = 1;
     print_one_opt(ctl->rttClamping, "rttClamping", &first_opt);
