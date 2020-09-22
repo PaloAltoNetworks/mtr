@@ -266,6 +266,10 @@ static void net_process_ping(
         }
         return;
     }
+    if (err == ETIMEDOUT) {
+        // we don't know what hop, so ignore
+        return;
+    }
     nh = &host[index];
     nh->err = err;
 

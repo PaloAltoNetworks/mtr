@@ -717,7 +717,7 @@ void handle_command_reply(
        record the result.
      */
     if (parse_reply_arguments
-        (ctl, &reply, &fromaddress, &round_trip_time, &mpls, &ds) || err) {
+        (ctl, &reply, &fromaddress, &round_trip_time, &mpls, &ds) || err == ETIMEDOUT) {
 
         reply_func(ctl, seq_num, err, &mpls, ds, (void *) &fromaddress,
                    round_trip_time);
