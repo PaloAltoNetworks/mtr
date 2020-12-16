@@ -135,7 +135,8 @@ struct mpls_label_t {
 };
 
 void init_net_state_privileged(
-    struct net_state_t *net_state);
+    struct net_state_t *net_state,
+    const char* bind_interface);
 
 void init_net_state(
     struct net_state_t *net_state);
