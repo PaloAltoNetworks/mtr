@@ -178,6 +178,7 @@ static void __attribute__ ((__noreturn__)) usage(FILE * out)
     fputs(" -d, --rtt-clamping         test target first then limit RTT to 75%/150% of target RTT on first/subsequent hops\n", out);
     fputs(" -E, --end-verification     test past destination to make sure it is the end\n", out);
     fputs(" -q, --seqno NUMBER         set the initial sequence number\n", out);
+    fputs(" -Y, --bind-interface IFNAME Bind the outgoing socket to the specified interface\n", out);
     fputs(" -h, --help                 display this help and exit\n", out);
     fputs
         (" -v, --version              output version information and exit\n",
@@ -339,6 +340,7 @@ static void parse_arg(
         {"rtt-clamping", 0, NULL, 'd'},
         {"end-verification", 0, NULL, 'E'},
         {"seqno", 1, NULL, 'q'},
+        {"bind-interface", 1, NULL, 'Y'},
 
         {"inet", 0, NULL, '4'}, /* IPv4 only */
 #ifdef ENABLE_IPV6
@@ -452,6 +454,10 @@ static void parse_arg(
             if (ctl->initial_seqno_offset > MaxSequence)
                 error(EXIT_FAILURE, 0, "value out of range (%d - %d): %s",
                       0, (MaxSequence - MinSequence), optarg);
+            break;
+
+        case 'Y':
+            ctl->bindInterface = optarg;
             break;
 
         case 'h':

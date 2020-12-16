@@ -28,9 +28,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <limits.h>
 
 #ifdef HAVE_LIBCAP
 #include <sys/capability.h>
+#endif
+
+#ifdef HAVE_GETOPT
+#include <getopt.h>
+#else
+#include "portability/getopt.h"
 #endif
 
 #include "wait.h"
@@ -73,6 +80,18 @@ int drop_elevated_permissions(
     return 0;
 }
 
+static void __attribute__ ((__noreturn__)) usage(FILE * out)
+{
+    fputs("\nUsage:\n", out);
+    fputs(" mtr-packet [options]\n", out);
+    fputs("\n", out);
+    fputs(" -b, --bind-interface <IFNAME>  bind to a specific interface\n", out);
+    fputs(" -h, --help                     display this help and exit\n", out);
+    fputs("\n", out);
+    fputs("See the 'man 8 mtr' for details.\n", out);
+    exit(0);
+}
+
 int main(
     int argc,
     char **argv)
@@ -81,12 +100,55 @@ int main(
     struct command_buffer_t command_buffer;
     struct net_state_t net_state;
 
+    char* bind_interface = NULL;
+    int opt;
+    static const struct option long_options[] = {
+        /* option name, has argument, NULL, short name */
+        {"help", 0, NULL, 'h'},
+        {"bind-interface", 1, NULL, 'b'},
+        {NULL, 0, NULL, 0}
+    };
+    enum { num_options = sizeof(long_options) / sizeof(struct option) };
+    char short_options[num_options * 2];
+    size_t n, p;
+
+    for (n = p = 0; n < num_options; n++) {
+        if (CHAR_MAX < long_options[n].val) {
+            continue;
+        }
+        short_options[p] = long_options[n].val;
+        p++;
+        if (long_options[n].has_arg == 1) {
+            short_options[p] = ':';
+            p++;
+        }
+        /* optional options need two ':', but ignore them now as they are not in use */
+    }
+
+    opt = 0;
+    while (1) {
+        opt = getopt_long(argc, argv, short_options, long_options, NULL);
+        if (opt == -1)
+            break;
+
+        switch (opt) {
+        case 'b':
+            bind_interface = optarg;
+            break;
+        case 'h':
+            usage(stdout);
+            break;
+        default:
+            usage(stderr);
+        }
+    }
+
     /*
        To minimize security risk, the only thing done prior to 
        dropping SUID should be opening the network state for
        raw sockets.
      */
-    init_net_state_privileged(&net_state);
+    init_net_state_privileged(&net_state, bind_interface);
     if (drop_elevated_permissions()) {
         error(EXIT_FAILURE, errno, "Unable to drop elevated permissions");
     }

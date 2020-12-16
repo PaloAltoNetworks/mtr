@@ -95,6 +95,9 @@ struct net_state_platform_t {
 
     /*  The next port number to use when creating a new probe  */
     int next_sequence;
+
+    /*  If not NULL the interface to bind to */
+    char* bind_interface;
 };
 
 struct net_state_t;

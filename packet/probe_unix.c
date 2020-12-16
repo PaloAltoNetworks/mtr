@@ -34,6 +34,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <net/if.h>
 
 #include "platform.h"
 #include "protocols.h"
@@ -259,6 +260,17 @@ int open_ip4_sockets_raw(
         return -1;
     }
 
+    if (net_state->platform.bind_interface) {
+        /* bind to the specific interface */
+        struct ifreq ifr;
+        memset(&ifr, 0, sizeof(ifr));
+        strncpy(ifr.ifr_name, net_state->platform.bind_interface, sizeof(ifr.ifr_name));
+        if (setsockopt(send_socket, SOL_SOCKET, SO_BINDTODEVICE, (void *)&ifr, sizeof(ifr))) {
+            close(send_socket);
+            return -1;
+        }
+    }
+
     /*
        Open a second socket with IPPROTO_ICMP because we are only
        interested in receiving ICMP packets, not all packets.
@@ -417,7 +429,8 @@ int open_ip6_sockets_dgram(
     as possible to minimize security risk.
 */
 void init_net_state_privileged(
-    struct net_state_t *net_state)
+    struct net_state_t *net_state,
+    const char* bind_interface)
 {
     int ip4_err = 0;
     int ip6_err = 0;
@@ -425,6 +438,10 @@ void init_net_state_privileged(
     memset(net_state, 0, sizeof(struct net_state_t));
 
     net_state->platform.next_sequence = MIN_PORT;
+    if (bind_interface)
+    {
+        net_state->platform.bind_interface = strdup(bind_interface);
+    }
 
     if (open_ip4_sockets_raw(net_state)) {
 #ifdef HAVE_LINUX_ERRQUEUE_H

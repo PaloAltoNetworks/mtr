@@ -86,6 +86,7 @@ struct mtr_ctl {
     char *dst_ip_str;           /* [sinefa] The resolved destination IP address */
     char *InterfaceName;
     char *InterfaceAddress;
+    char *bindInterface;
     char LocalHostname[128];
     int ipinfo_no;
     int ipinfo_max;

@@ -212,9 +212,10 @@ extern char *myname;
 */
 static
 void execute_packet_child(
-    void)
+    struct mtr_ctl *ctl)
 {
     char buf[256];
+
     /*
        Allow the MTR_PACKET environment variable to override
        the path to the mtr-packet executable.  This is necessary
@@ -229,7 +230,11 @@ void execute_packet_child(
        First, try to execute mtr-packet from PATH
        or MTR_PACKET environment variable.
      */
-    execlp(mtr_packet_path, "mtr-packet", (char *) NULL);
+    if (ctl->bindInterface) {
+        execlp(mtr_packet_path, "mtr-packet", "-b", ctl->bindInterface, (char *) NULL);
+    } else {
+        execlp(mtr_packet_path, "mtr-packet", (char *) NULL);
+    }
 
     /* 
        Then try to find it where WE were executed from.  
@@ -237,12 +242,20 @@ void execute_packet_child(
     strncpy (buf, myname, 240);
     strcat (buf, "-packet");
     mtr_packet_path = buf;
-    execl(mtr_packet_path, "mtr-packet", (char *) NULL);
+    if (ctl->bindInterface) {
+        execl(mtr_packet_path, "mtr-packet", "-b", ctl->bindInterface, (char *) NULL);
+    } else {
+        execl(mtr_packet_path, "mtr-packet", (char *) NULL);
+    }
 
     /*
        If mtr-packet is not found, try to use mtr-packet from current directory
      */
-    execl("./mtr-packet", "./mtr-packet", (char *) NULL);
+    if (ctl->bindInterface) {
+        execl("./mtr-packet", "./mtr-packet", "-b", ctl->bindInterface, (char *) NULL);
+    } else {
+        execl("./mtr-packet", "./mtr-packet", (char *) NULL);
+    }
 
     /*  Both exec attempts failed, so nothing to do but exit  */
     exit(1);
@@ -285,7 +298,7 @@ int open_command_pipe(
             close(i);
         }
 
-        execute_packet_child();
+        execute_packet_child(ctl);
     } else {
         memset(cmdpipe, 0, sizeof(struct packet_command_pipe_t));
 

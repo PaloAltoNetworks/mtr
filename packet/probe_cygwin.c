@@ -89,7 +89,8 @@ static DWORD WINAPI icmp_service_thread(LPVOID param);
 
 /*  Windows doesn't require any initialization at a privileged level  */
 void init_net_state_privileged(
-    struct net_state_t *net_state)
+    struct net_state_t *net_state,
+    const char* bind_interface)
 {
 }
 
