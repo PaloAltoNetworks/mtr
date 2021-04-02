@@ -26,6 +26,7 @@
 
 #include "protocols.h"
 #include "sockaddr.h"
+#include <net/if.h>
 
 /* For Mac OS X and FreeBSD */
 #ifndef SOL_IP
@@ -427,6 +428,19 @@ int open_stream_socket(
     if (stream_socket == -1) {
         return -1;
     }
+
+#ifdef SO_BINDTODEVICE
+    if (net_state->platform.bind_interface) {
+        /* bind to the specific interface */
+        struct ifreq ifr;
+        memset(&ifr, 0, sizeof(ifr));
+        strncpy(ifr.ifr_name, net_state->platform.bind_interface, sizeof(ifr.ifr_name));
+        if (setsockopt(stream_socket, SOL_SOCKET, SO_BINDTODEVICE, (void *)&ifr, sizeof(ifr))) {
+            close(stream_socket);
+            return -1;
+        }
+    }
+#endif
 
     set_socket_nonblocking(stream_socket);
 

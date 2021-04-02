@@ -260,6 +260,7 @@ int open_ip4_sockets_raw(
         return -1;
     }
 
+#ifdef SO_BINDTODEVICE
     if (net_state->platform.bind_interface) {
         /* bind to the specific interface */
         struct ifreq ifr;
@@ -270,6 +271,7 @@ int open_ip4_sockets_raw(
             return -1;
         }
     }
+#endif
 
     /*
        Open a second socket with IPPROTO_ICMP because we are only
