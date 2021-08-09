@@ -123,7 +123,7 @@ static void __attribute__ ((__noreturn__)) usage(FILE * out)
     fputs
         (" -P, --port PORT            target port number for TCP, SCTP, or UDP\n",
          out);
-    fputs(" -L, --localport LOCALPORT  source port number for UDP\n", out);
+    fputs(" -L, --localport LOCALPORT  source port number for UDP or TCP\n", out);
     fputs
         (" -s, --psize PACKETSIZE     set the packet size used for probing\n",
          out);
@@ -177,6 +177,7 @@ static void __attribute__ ((__noreturn__)) usage(FILE * out)
     fputs(" -D, --features             display features supported my mtr\n", out);
     fputs(" -d, --rtt-clamping         test target first then limit RTT to 75%/150% of target RTT on first/subsequent hops\n", out);
     fputs(" -E, --end-verification     test past destination to make sure it is the end\n", out);
+    fputs(" -A, --localport-max PORT   set the maximum local port to cycle through ports from local-port to this\n", out);
     fputs(" -q, --seqno NUMBER         set the initial sequence number\n", out);
     fputs(" -Y, --bind-interface IFNAME Bind the outgoing socket to the specified interface\n", out);
     fputs(" -h, --help                 display this help and exit\n", out);
@@ -339,6 +340,7 @@ static void parse_arg(
         {"features", 0, NULL, 'D'},
         {"rtt-clamping", 0, NULL, 'd'},
         {"end-verification", 0, NULL, 'E'},
+        {"localport-max", 1, NULL, 'A'},
         {"seqno", 1, NULL, 'q'},
         {"bind-interface", 1, NULL, 'Y'},
 
@@ -447,6 +449,15 @@ static void parse_arg(
 
         case 'E':
             ctl->endVerification = 1;
+            break;
+
+        case 'A':
+            ctl->localportMax =
+                strtonum_or_err(optarg, "invalid argument", STRTO_INT);
+            if (ctl->localportMax < MinPort || MaxPort < ctl->localportMax) {
+                error(EXIT_FAILURE, 0, "Illegal port number: %d",
+                      ctl->localportMax);
+            }
             break;
 
         case 'q':

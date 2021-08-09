@@ -437,6 +437,7 @@ void send_probe_command(
     struct packet_command_pipe_t *cmdpipe,
     ip_t * address,
     ip_t * localaddress,
+    int localport,
     int packet_size,
     int sequence,
     int time_to_live)
@@ -468,9 +469,9 @@ void send_probe_command(
                                 ctl->remoteport);
     }
 
-    if (ctl->localport) {
+    if (localport) {
         append_command_argument(command, COMMAND_BUFFER_SIZE, "local-port",
-                                ctl->localport);
+                                localport);
     }
 #ifdef SO_MARK
     if (ctl->mark) {

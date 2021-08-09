@@ -184,6 +184,23 @@ static int new_sequence(
     return seq;
 }
 
+static int select_localport(struct mtr_ctl *ctl)
+{
+    static int localport = 0;
+    if (localport == 0) {
+        // first time, use local port
+        localport = ctl->localport;
+    } else if (localport && ctl->localportMax) {
+        // susequent time, if local port is set _and_ max port then increment
+        // port until we hit hax port and then set back to the start
+        localport++;
+        if (localport > ctl->localportMax) {
+            localport = ctl->localport;
+        }
+    }
+    return localport;
+}
+
 
 /*  Attempt to find the host at a particular number of hops away  */
 static void net_send_query(
@@ -194,9 +211,10 @@ static void net_send_query(
 {
     int seq = new_sequence(ctl, index);
     int time_to_live = ttl;
+    int localport = select_localport(ctl);
 
     send_probe_command(ctl, &packet_command_pipe, remoteaddress,
-                       sourceaddress, packet_size, seq, time_to_live);
+                       sourceaddress, localport, packet_size, seq, time_to_live);
 }
 
 
