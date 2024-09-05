@@ -110,6 +110,9 @@ struct probe_t {
 
     /*  Platform specific probe tracking  */
     struct probe_platform_t platform;
+
+    /* Save error code - waiting for ICMP which may never arrive, use this on timeout when the ICMP does not arrive */
+    int saved_icmp_error;
 };
 
 /*  Global state for interacting with the network  */

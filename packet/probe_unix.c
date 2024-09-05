@@ -875,7 +875,9 @@ void receive_replies_from_probe_socket(
     if (!probe_socket) {
         return;
     }
-
+    if (probe->saved_icmp_error) {
+        return;
+    }
     FD_ZERO(&write_set);
     FD_SET(probe_socket, &write_set);
 
@@ -905,7 +907,14 @@ void receive_replies_from_probe_socket(
        If the connection complete successfully, or was refused, we can
        assume our probe arrived at the destination.
      */
-    if (!err || err == ECONNREFUSED || err == EHOSTUNREACH) {
+    if (err == ECONNREFUSED) {
+        // reached target host but probably not listening
+        receive_probe(net_state, probe, ICMP_DEST_UNREACH, &probe->remote_addr, NULL, 0, NULL, -1);
+    } else if (err == EHOSTUNREACH) {
+        // received ICMP - we don't know the IP so don't report one
+        probe->saved_icmp_error = ICMP_TIME_EXCEEDED;
+    } else if (!err) {
+        // no error
         receive_probe(net_state, probe, ICMP_ECHOREPLY,
                       &probe->remote_addr, NULL, 0, NULL, -1);
     } else {
@@ -982,7 +991,7 @@ int gather_probe_sockets(
     LIST_FOREACH(probe, &net_state->outstanding_probes, probe_list_entry) {
         probe_socket = probe->platform.socket;
 
-        if (probe_socket) {
+        if (probe_socket && probe->saved_icmp_error == 0) {
             FD_SET(probe_socket, write_set);
             if (probe_socket >= nfds) {
                 nfds = probe_socket + 1;
@@ -1013,10 +1022,16 @@ void check_probe_timeouts(
                       probe_list_entry, probe_safe_iter) {
 
         if (compare_timeval(probe->platform.timeout_time, now) < 0) {
-            /*  Report timeout to the command stream  */
-            printf("%d no-reply\n", probe->token);
-
-            free_probe(net_state, probe);
+            if (probe->saved_icmp_error) {
+                struct sockaddr_storage no_remote_addr;
+                memset(&no_remote_addr, 0, sizeof(no_remote_addr));
+                no_remote_addr.ss_family = probe->remote_addr.ss_family;
+                receive_probe(net_state, probe, ICMP_TIME_EXCEEDED, &no_remote_addr, NULL, 0, NULL, -1);
+            } else {
+                /*  Report timeout to the command stream  */
+                printf("%d no-reply\n", probe->token);
+                free_probe(net_state, probe);
+            }
         }
     }
 }
