@@ -443,6 +443,8 @@ static void parse_arg(
             printf("json-mpls\n");              ///< Supports MPLS values in json output
             printf("json-tos\n");               ///< Supports TOS values in json output
             printf("seqno\n");                  ///< Supports -q/--seqno
+            printf("no-dns\n");                 ///< Supports --no-dns
+            printf("no-private-dns\n");         ///< Supports --no-private-dns
             exit(EXIT_SUCCESS);
             break;
 
