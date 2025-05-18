@@ -166,6 +166,7 @@ static void __attribute__ ((__noreturn__)) usage(FILE * out)
     fputs(" -g, --gtk                  use GTK+ xwindow interface\n", out);
 #endif
     fputs(" -n, --no-dns               do not resolve host names\n", out);
+    fputs("     --no-private-dns       do not resolve host names for RFC 1918 private IP addresses\n", out);
     fputs(" -b, --show-ips             show IP numbers and host names\n",
           out);
     fputs(" -o, --order FIELDS         select output fields\n", out);
@@ -331,7 +332,8 @@ static void parse_arg(
        3/ update the help message (see usage() function).
      */
     enum {
-        OPT_DISPLAYMODE = CHAR_MAX + 1
+        OPT_DISPLAYMODE = CHAR_MAX + 1,
+        OPT_NO_PRIVATE_DNS = CHAR_MAX + 2
     };
     static const struct option long_options[] = {
         /* option name, has argument, NULL, short name */
@@ -367,6 +369,7 @@ static void parse_arg(
         /* maybe above should change to -d 'x' */
 
         {"no-dns", 0, NULL, 'n'},
+        {"no-private-dns", 0, NULL, OPT_NO_PRIVATE_DNS },
         {"show-ips", 0, NULL, 'b'},
         {"order", 1, NULL, 'o'},        /* fields to display & their order */
 #ifdef HAVE_IPINFO
@@ -440,6 +443,8 @@ static void parse_arg(
             printf("json-mpls\n");              ///< Supports MPLS values in json output
             printf("json-tos\n");               ///< Supports TOS values in json output
             printf("seqno\n");                  ///< Supports -q/--seqno
+            printf("no-dns\n");                 ///< Supports --no-dns
+            printf("no-private-dns\n");         ///< Supports --no-private-dns
             exit(EXIT_SUCCESS);
             break;
 
@@ -535,6 +540,9 @@ static void parse_arg(
             break;
         case 'n':
             ctl->dns = 0;
+            break;
+        case OPT_NO_PRIVATE_DNS:
+            ctl->private_dns = 0;
             break;
         case 'i':
             ctl->WaitTime = strtofloat_or_err(optarg, "invalid argument");
@@ -832,6 +840,7 @@ int main(
     ctl.GraceTime = 5.0;
     ctl.dns = 1;
     ctl.use_dns = 1;
+    ctl.private_dns = 1;
     ctl.cpacketsize = 64;
     ctl.af = DEFAULT_AF;
     ctl.mtrtype = IPPROTO_ICMP;

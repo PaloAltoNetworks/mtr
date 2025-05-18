@@ -278,16 +278,48 @@ char *dns_lookup2(
     return NULL;
 }
 
+int is_private_ip(struct mtr_ctl *ctl, ip_t* addr)
+{
+    if (ctl->af == AF_INET6) {
+        return 0;
+    }
 
-char *dns_lookup(
-    struct mtr_ctl *ctl,
-    ip_t * ip)
+    uint32_t ip;
+    memcpy(&ip, addr, sizeof(ip));
+    ip = ntohl(ip);
+
+    if ((ip & 0xFF000000) == 0x0A000000) {
+        // 10.0.0.0 - 10.255.255.255 (10/8 prefix)
+        return 1;
+    }
+
+    if ((ip & 0xFF000000) == 0xAC000000) {
+        uint8_t second = (ip >> 16) & 0xFF;
+        if (second >= 16 && second <= 31) {   
+            // 172.16.0.0 - 172.31.255.255 (172.16/12 prefix)
+            return 1;
+        }
+    }
+
+    if ((ip & 0xFFFF0000) == 0xC0A80000) {
+        // 192.168.0.0 - 192.168.255.255 (192.168/16 prefix)
+        return 1;
+    }
+
+    return 0;
+}
+
+char *dns_lookup(struct mtr_ctl *ctl, ip_t * ip)
 {
     char *t;
 
-    if (!ctl->dns || !ctl->use_dns)
+    if (!ctl->dns || !ctl->use_dns || (!ctl->private_dns && is_private_ip(ctl, ip)))
+    {
         return NULL;
+    }
+    
     t = dns_lookup2(ctl, ip);
+    
     return t ? t : strlongip(ctl, ip);
 }
 
