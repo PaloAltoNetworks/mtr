@@ -313,11 +313,23 @@ char *dns_lookup(struct mtr_ctl *ctl, ip_t * ip)
 {
     char *t;
 
-    if (!ctl->dns || !ctl->use_dns || (!ctl->private_dns && is_private_ip(ctl, ip)))
+    if (!ctl->dns || !ctl->use_dns)
     {
         return NULL;
     }
     
+    int is_private = is_private_ip(ctl, ip);
+
+    if (!ctl->private_dns && is_private)
+    {
+        return NULL;
+    }
+
+    if (!ctl->public_dns && !is_private)
+    {
+        return NULL;
+    }
+
     t = dns_lookup2(ctl, ip);
     
     return t ? t : strlongip(ctl, ip);
