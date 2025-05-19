@@ -167,7 +167,7 @@ static void __attribute__ ((__noreturn__)) usage(FILE * out)
 #endif
     fputs(" -n, --no-dns               do not resolve host names\n", out);
     fputs("     --no-private-dns       do not resolve host names for RFC 1918 private IP addresses\n", out);
-    fputs("     --no-public-dns        do not resolve host names for RFC 1918 public IP addresses\n", out);
+    fputs("     --no-public-dns        do not resolve host names for non RFC 1918 private IP addresses\n", out);
     fputs(" -b, --show-ips             show IP numbers and host names\n",
           out);
     fputs(" -o, --order FIELDS         select output fields\n", out);
