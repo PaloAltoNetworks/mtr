@@ -55,11 +55,10 @@ static size_t snprint_addr(
     ip_t * addr)
 {
     if (addrcmp((void *) addr, (void *) &ctl->unspec_addr, ctl->af)) {
-        struct hostent *host =
-            ctl->dns ? addr2host((void *) addr, ctl->af) : NULL;
+        struct hostent *host = addr2host(ctl, addr);
         if (!host)
             return snprintf(dst, dst_len, "%s", strlongip(ctl, addr));
-        else if (ctl->dns && ctl->show_ips)
+        else if (host && ctl->show_ips)
             return snprintf(dst, dst_len, "%s (%s)", host->h_name,
                             strlongip(ctl, addr));
         else
@@ -340,7 +339,7 @@ void json_close(
         addr = net_addr(at);
         mpls = net_mpls(at);
         snprint_addr(ctl, name, sizeof(name), addr);
-        host = ctl->dns ? addr2host((void *) addr, ctl->af) : NULL;
+        host = addr2host(ctl, addr);
 
         if (at == first) {
             printf("{\n");

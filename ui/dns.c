@@ -309,28 +309,36 @@ int is_private_ip(struct mtr_ctl *ctl, ip_t* addr)
     return 0;
 }
 
-char *dns_lookup(struct mtr_ctl *ctl, ip_t * ip)
+int should_perform_dns_lookup(struct mtr_ctl *ctl, ip_t * ip)
 {
-    char *t;
-
     if (!ctl->dns || !ctl->use_dns)
     {
-        return NULL;
+        return 0;
     }
     
     int is_private = is_private_ip(ctl, ip);
 
     if (!ctl->private_dns && is_private)
     {
-        return NULL;
+        return 0;
     }
 
     if (!ctl->public_dns && !is_private)
     {
+        return 0;
+    }
+
+    return 1;
+}
+
+char *dns_lookup(struct mtr_ctl *ctl, ip_t * ip)
+{
+    if (!should_perform_dns_lookup(ctl, ip)) 
+    {
         return NULL;
     }
 
-    t = dns_lookup2(ctl, ip);
+    char* t = dns_lookup2(ctl, ip);
     
     return t ? t : strlongip(ctl, ip);
 }
@@ -338,12 +346,15 @@ char *dns_lookup(struct mtr_ctl *ctl, ip_t * ip)
 /* XXX check if necessary/exported. */
 
 /* Resolve an IP address to a hostname. */
-struct hostent *addr2host(
-    const char *addr,
-    int family)
+struct hostent *addr2host(struct mtr_ctl *ctl, ip_t * ip)
 {
+    if (!should_perform_dns_lookup(ctl, ip)) 
+    {
+        return NULL;
+    }
+
     int len = 0;
-    switch (family) {
+    switch (ctl->af) {
     case AF_INET:
         len = sizeof(struct in_addr);
         break;
@@ -353,5 +364,5 @@ struct hostent *addr2host(
         break;
 #endif
     }
-    return gethostbyaddr(addr, len, family);
+    return gethostbyaddr((void*)ip, len, ctl->af);
 }
