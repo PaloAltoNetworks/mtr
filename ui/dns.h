@@ -50,6 +50,5 @@ extern char *strlongip(
 extern void addr2ip6arpa(
     ip_t * ip,
     char *buf);
-extern struct hostent *addr2host(
-    const char *addr,
-    int type);
+
+extern struct hostent *addr2host(struct mtr_ctl *ctl, ip_t * ip);
