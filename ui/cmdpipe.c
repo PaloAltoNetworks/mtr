@@ -489,6 +489,11 @@ void send_probe_command(
         error(EXIT_FAILURE, errno,
               "mtr-packet command pipe write failure");
     }
+
+    if (ctl->trace_mtr_packet) {
+        fputc('>', stderr);
+        fputs(command, stderr);
+    }
 }
 
 
@@ -693,6 +698,12 @@ void handle_command_reply(
     char *reply_name;
     struct mplslen mpls;
     int ds = -1; // -1 == could not determine DF (IPv4 TOS/IPv6 Traffic Class)
+
+    if (ctl->trace_mtr_packet) {
+        fputc('<', stderr);
+        fputs(reply_str, stderr);
+        fputc('\n', stderr);
+    }
 
     /*  Parse the reply string  */
     if (parse_command(&reply, reply_str)) {

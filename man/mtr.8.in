@@ -110,6 +110,9 @@ mtr \- a network diagnostic tool
 .BI \-Z \ TIMEOUT\c
 ]
 [\c
+.B \-\-trace\-mtr\-packet\c
+]
+[\c
 .BI \-M \ MARK\c
 ]
 .I HOSTNAME
@@ -433,6 +436,9 @@ netfilter MARK target but socket-based.
 is 32 unsigned integer.  See
 .BR socket (7)
 for full description of this socket option.
+.TP
+.B \fB\-\-trace\-mtr\-packet
+Trace mtr-packet commands and responses to stderr.
 .SH ENVIRONMENT
 .B mtr
 recognizes a few environment variables.
