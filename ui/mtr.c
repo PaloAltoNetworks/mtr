@@ -182,6 +182,7 @@ static void __attribute__ ((__noreturn__)) usage(FILE * out)
     fputs(" -A, --localport-max PORT   set the maximum local port to cycle through ports from local-port to this\n", out);
     fputs(" -q, --seqno NUMBER         set the initial sequence number\n", out);
     fputs(" -Y, --bind-interface IFNAME Bind the outgoing socket to the specified interface\n", out);
+    fputs("     --trace-mtr-packet     print mtr-packet i/o to stderr", out);
     fputs(" -h, --help                 display this help and exit\n", out);
     fputs
         (" -v, --version              output version information and exit\n",
@@ -335,7 +336,8 @@ static void parse_arg(
     enum {
         OPT_DISPLAYMODE = CHAR_MAX + 1,
         OPT_NO_PRIVATE_DNS = CHAR_MAX + 2,
-        OPT_NO_PUBLIC_DNS = CHAR_MAX + 3
+        OPT_NO_PUBLIC_DNS = CHAR_MAX + 3,
+        OPT_TRACE_MTR_PACKET = CHAR_MAX + 4
     };
     static const struct option long_options[] = {
         /* option name, has argument, NULL, short name */
@@ -403,6 +405,7 @@ static void parse_arg(
 #ifdef SO_MARK
         {"mark", 1, NULL, 'M'}, /* use SO_MARK */
 #endif
+        {"trace-mtr-packet", 0, NULL, OPT_TRACE_MTR_PACKET},
         {NULL, 0, NULL, 0}
     };
     enum { num_options = sizeof(long_options) / sizeof(struct option) };
@@ -449,6 +452,7 @@ static void parse_arg(
             printf("no-dns\n");                 ///< Supports --no-dns
             printf("no-private-dns\n");         ///< Supports --no-private-dns
             printf("no-public-dns\n");          ///< Supports --no-public-dns
+            printf("trace-mtr-packet\n");       ///< Supports --trace-mtr-packet
             exit(EXIT_SUCCESS);
             break;
 
@@ -708,6 +712,9 @@ static void parse_arg(
                 strtonum_or_err(optarg, "invalid argument", STRTO_U32INT);
             break;
 #endif
+        case OPT_TRACE_MTR_PACKET:
+            ctl->trace_mtr_packet = 1;
+            break;
         default:
             usage(stderr);
         }
@@ -859,6 +866,7 @@ int main(
     ctl.ipinfo_no = -1;
     ctl.ipinfo_max = -1;
     ctl.initial_seqno_offset = -1; /* random */
+    ctl.trace_mtr_packet = 0;
     xstrncpy(ctl.fld_active, "LS NABWV", 2 * MAXFLD);
 
     /*
